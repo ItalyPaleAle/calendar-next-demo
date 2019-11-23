@@ -1,0 +1,10 @@
+{
+    "eslint.validate": [
+        "javascript",
+        "html",
+        "svelte"
+    ],
+    "files.exclude": {
+        "**/node_modules": true
+    }
+}

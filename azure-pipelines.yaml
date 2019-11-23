@@ -1,0 +1,29 @@
+# Node.js with webpack
+# Build a Node.js project using the webpack CLI.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+pool:
+  vmImage: 'Ubuntu 18.04'
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '12.x'
+  displayName: 'Install Node.js'
+
+- script: |
+    curl -L https://italypaleale.blob.core.windows.net/public/calendar-next-dotenv -o .env
+    echo ".env file"
+    cat .env
+  displayName: 'Download .env file'
+
+- script: |
+    npm ci 
+    npm run build
+  displayName: 'Compile app'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+  inputs:
+    PathtoPublish: dist

@@ -1,0 +1,39 @@
+{
+  "name": "calendar-next",
+  "version": "0.1.0",
+  "description": "Shows next meeting in Office365 calendar",
+  "author": "ItalyPaleAle",
+  "private": true,
+  "license": "MIT",
+  "dependencies": {
+    "tailwindcss": "^1.1.3"
+  },
+  "devDependencies": {
+    "@fullhuman/postcss-purgecss": "^1.3.0",
+    "autoprefixer": "^9.7.1",
+    "clean-webpack-plugin": "^3.0.0",
+    "css-loader": "^3.2.0",
+    "cssnano": "^4.1.10",
+    "dotenv-webpack": "^1.7.0",
+    "eslint": "^6.7.0",
+    "eslint-plugin-html": "^6.0.0",
+    "eslint-plugin-svelte3": "^2.7.3",
+    "html-webpack-plugin": "^3.2.0",
+    "mini-css-extract-plugin": "^0.8.0",
+    "postcss-loader": "^3.0.0",
+    "serve": "^11.2.0",
+    "style-loader": "^1.0.0",
+    "svelte": "^3.15.0",
+    "svelte-loader": "2.13.6",
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.10",
+    "webpack-plugin-serve": "^0.12.1",
+    "webpack-subresource-integrity": "^1.3.4"
+  },
+  "scripts": {
+    "build": "NODE_ENV=production npx webpack",
+    "dev": "npx webpack",
+    "eslint": "npx eslint -c .eslintrc.js --ext .js,.svelte,.html .",
+    "lint": "npm run eslint"
+  }
+}
