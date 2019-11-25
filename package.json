@@ -6,6 +6,7 @@
   "private": true,
   "license": "MIT",
   "dependencies": {
+    "idtoken-verifier": "^1.4.1",
     "tailwindcss": "^1.1.3"
   },
   "devDependencies": {

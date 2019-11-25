@@ -1,4 +1,5 @@
 import {RandomString} from './Utils'
+import {DecodeString} from './Base64Utils'
 import storage from './StorageService'
 import IdTokenVerifier from 'idtoken-verifier'
 
@@ -209,17 +210,37 @@ export class Credentials {
         if (!process.env.AUTH_CLIENT_ID) {
             throw Error('Empty AUTH_CLIENT_ID env variable')
         }
+        if (!process.env.JWKS_URL) {
+            throw Error('Empty JWKS_URL env variable')
+        }
 
         // Check the format
         if (!jwt || !IsJWT(jwt)) {
             throw Error('Invalid token')
         }
 
-        // Ensure issuer ends with /
-        const issuer = process.env.AUTH_ISSUER + (process.env.AUTH_ISSUER.charAt(process.env.AUTH_ISSUER.length - 1) != '/' ? '/' : '')
+        // Replace the tenant id in the issuer. We need to parse the jwt and look at the tid property
+        // We already know that the format is right
+        let tenant
+        try {
+            const [, jwtPayloadB64] = jwt.split('.')
+            const jwtPayloadStr = DecodeString(jwtPayloadB64)
+            const jwtPayload = JSON.parse(jwtPayloadStr)
+            tenant = jwtPayload && jwtPayload.tid
+        }
+        catch (e) {
+            throw Error('JWT payload is invalid')
+        }
+        if (!tenant) {
+            throw Error('Tenant ID missing in payload') 
+        }
+
+        // Get the issuer
+        const issuer = process.env.AUTH_ISSUER.replace('{tenant}', tenant)
 
         // Validate the token
         const verifier = new IdTokenVerifier({
+            jwksURI: process.env.JWKS_URL,
             issuer,
             audience: process.env.AUTH_CLIENT_ID
         })
