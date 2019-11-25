@@ -1,5 +1,5 @@
 import credentials, {AuthenticationAttempts} from './lib/Credentials'
-import {accessToken, profile} from './stores'
+import {profile} from './stores'
 import App from './views/App.svelte'
 
 import './main.css'
@@ -44,8 +44,8 @@ async function handleSession() {
     if (!credentials.getToken()) {
         return false
     }
-    const accessTokenResult = credentials.getAccessToken()
-    if (!accessTokenResult) {
+    const accessToken = credentials.getAccessToken()
+    if (!accessToken) {
         return false
     }
 
@@ -55,7 +55,6 @@ async function handleSession() {
     try {
         profileResult = await credentials.getProfile()
         profile.set(profileResult)
-        accessToken.set(accessTokenResult)
     }
     catch (error) {
         /* eslint-disable-next-line no-console */

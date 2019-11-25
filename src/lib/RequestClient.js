@@ -1,13 +1,20 @@
 import {TimeoutPromise} from './Utils'
+import credentials from './Credentials'
 
 const requestTimeout = 20000 // 20s
 
 /**
  * Performs API requests.
  */
-export async function Request(url, token, options) {
+export async function Request(url, options) {
     if (!options) {
         options = {}
+    }
+
+    // Access Token
+    const token = credentials.getAccessToken()
+    if (!token) {
+        throw Error('No access token')
     }
 
     // Set the options
@@ -60,12 +67,12 @@ export async function Request(url, token, options) {
     }
 
     // We're expecting JSON data
-    if (response.headers.get('content-type') != 'application/json') {
+    if (!response.headers.get('content-type').startsWith('application/json')) {
         throw Error('Response was not JSON')
     }
 
     // Read the response stream and get the data as text
     const data = await response.text()
 
-    return data
+    return JSON.parse(data)
 }

@@ -263,7 +263,7 @@ export class Credentials {
 
         // If there's an expiry, store the time
         if (expiry) {
-            storage.sessionStorage.setItem(this._tokenExpiryKeyName, (new Date(Date.now() + (expiry * 1000))).toString())
+            storage.sessionStorage.setItem(this._tokenExpiryKeyName, (new Date(Date.now() + (expiry * 1000))).toISOString())
         }
     }
 
