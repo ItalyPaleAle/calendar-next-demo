@@ -1,5 +1,5 @@
 import credentials, {AuthenticationAttempts} from './lib/Credentials'
-import {profile} from './stores'
+import {accessToken, profile} from './stores'
 import App from './views/App.svelte'
 
 import './main.css'
@@ -7,17 +7,26 @@ import './main.css'
 const attempts = new AuthenticationAttempts()
 
 async function handleSession() {
-    // Check if we have an id_token
+    // Check if we have an id_token and an access_token
     if (window.location.hash) {
-        const match = window.location.hash.match(/id_token=(([A-Za-z0-9\-_~+/]+)\.([A-Za-z0-9\-_~+/]+)(?:\.([A-Za-z0-9\-_~+/]+)))/)
-        if (match && match[1]) {
+        const matchIdToken = window.location.hash.match(/id_token=(([A-Za-z0-9\-_~+/]+)\.([A-Za-z0-9\-_~+/]+)(?:\.([A-Za-z0-9\-_~+/]+)))/)
+        const matchAccessToken = window.location.hash.match(/access_token=(([A-Za-z0-9\-_~+/]+)\.([A-Za-z0-9\-_~+/]+)(?:\.([A-Za-z0-9\-_~+/]+)))/)
+        const matchExpires = window.location.hash.match(/expires_in=([0-9]+)/)
+        if (matchIdToken && matchIdToken[1] && matchAccessToken && matchAccessToken[1]) {
             // First thing: remove the token from the URL (for security)
             history.replaceState(undefined, undefined, '#')
 
             // Validate and store the JWT
             // If there's an error, redirect to auth page
             try {
-                await credentials.setToken(match[1])
+                // Set (and validate) the JWT
+                await credentials.setToken(matchIdToken[1])
+
+                // Check if we have an expiry for the token
+                const expiry = parseInt((matchExpires && matchExpires[1]) || 0, 10)
+
+                // Set the access_token
+                credentials.setAccessToken(matchAccessToken[1], expiry)
 
                 // Reset attempts counter
                 attempts.resetAttempts()
@@ -31,8 +40,12 @@ async function handleSession() {
         }
     }
 
-    // If we have credentials stored, redirect the user to the authentication page
+    // If we don't have credentials stored, redirect the user to the authentication page
     if (!credentials.getToken()) {
+        return false
+    }
+    const accessTokenResult = credentials.getAccessToken()
+    if (!accessTokenResult) {
         return false
     }
 
@@ -42,6 +55,7 @@ async function handleSession() {
     try {
         profileResult = await credentials.getProfile()
         profile.set(profileResult)
+        accessToken.set(accessTokenResult)
     }
     catch (error) {
         /* eslint-disable-next-line no-console */

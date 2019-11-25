@@ -74,9 +74,12 @@ export class AuthenticationAttempts {
 export class Credentials {
     constructor() {
         this._sessionKeyName = 'calendar-next-jwt'
+        this._accessTokenKeyName = 'calendar-next-token'
+        this._tokenExpiryKeyName = 'calendar-next-expiry'
         this._tokenValidated = false
         this._nonce = new Nonce()
         this._profile = null
+        this._accessToken = null
     }
 
     /**
@@ -174,6 +177,54 @@ export class Credentials {
     }
 
     /**
+     * Returns the access_token for the session if it hasn't expired
+     *
+     * @returns {string|null} access_token, or null if it isn't set or it has expired
+     */
+    getAccessToken() {
+        // If we have the token in memory, return it
+        if (this._accessToken) {
+            return this._accessToken
+        }
+
+        const read = storage.sessionStorage.getItem(this._accessTokenKeyName)
+        if (!read || !read.length) {
+            return null
+        }
+
+        // Check if it has expired
+        const expiryRead = storage.sessionStorage.getItem(this._tokenExpiryKeyName)
+        if (!expiryRead || !expiryRead.length) {
+            return null
+        }
+        const expiry = (new Date(expiryRead)).getTime()
+        const now = Date.now()
+        if (expiry <= now) {
+            return null
+        }
+
+        // Decode the token
+        let data
+        try {
+            data = JSON.parse(read)
+        }
+        catch (error) {
+            /* eslint-disable-next-line no-console */
+            console.error('Error while parsing JSON from sessionStorage', error)
+            throw Error('Could not get the token from session storage')
+        }
+
+        if (!data || !data.accessToken) {
+            return null
+        }
+
+        // Set cache
+        this._accessToken = data.accessToken
+
+        return data.accessToken
+    }
+
+    /**
      * Stores the JWT token for the session
      *
      * @param {string} jwt - JWT Token
@@ -194,6 +245,26 @@ export class Credentials {
 
         // Set the profile in memory
         this._profile = profile
+    }
+
+    /**
+     * Stores the access_token for the session
+     *
+     * @param {string} accessToken
+     * @param {number} expiry
+     * @async
+     */
+    setAccessToken(accessToken, expiry) {
+        // Store the token
+        storage.sessionStorage.setItem(this._accessTokenKeyName, JSON.stringify({accessToken}))
+
+        // Set the access token in memory
+        this._accessToken = accessToken
+
+        // If there's an expiry, store the time
+        if (expiry) {
+            storage.sessionStorage.setItem(this._tokenExpiryKeyName, (new Date(Date.now() + (expiry * 1000))).toString())
+        }
     }
 
     /**

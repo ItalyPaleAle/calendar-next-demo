@@ -3,6 +3,7 @@
 import {writable, readable} from 'svelte/store'
 
 export const profile = writable(null)
+export const accessToken = writable(null)
 export const pkg = readable({
     name: PKG_NAME,
     version: PKG_VERSION
