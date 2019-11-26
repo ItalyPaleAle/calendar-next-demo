@@ -83,7 +83,7 @@ stages:
                 - task: CopyFilesOverSSH@0
                   displayName: 'Copy files to staging via SSH'
                   inputs:
-                    sshEndpoint: 'IPFS-EU'
+                    sshEndpoint: 'IPFS'
                     sourceFolder: '$(Pipeline.Workspace)/dist'
                     targetFolder: '/data/ipfs-staging/calendar-next'
                     cleanTargetFolder: true
