@@ -115,7 +115,7 @@ export class Credentials {
         }
 
         // Ensure it ends with a /
-        appUrl += appUrl.charAt(appUrl.length) == '/' ? '' : '/'
+        appUrl += appUrl.endsWith('/') ? '' : '/'
 
         // Generate a nonce
         const nonce = this._nonce.generate()
