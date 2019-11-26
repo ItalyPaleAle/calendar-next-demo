@@ -107,6 +107,9 @@ export class Credentials {
             if (window.location.hash && window.location.hash.length) {
                 href = href.slice(0, -1 * window.location.hash.length)
             }
+            if (href.endsWith('#')) {
+                href = href.slice(0, -1)
+            }
             // Remove index.html from the end if present
             if (href.endsWith('index.html')) {
                 href = href.slice(0, -10)
