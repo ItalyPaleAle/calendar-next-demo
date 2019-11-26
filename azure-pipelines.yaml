@@ -1,29 +1,134 @@
-# Node.js with webpack
-# Build a Node.js project using the webpack CLI.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+# Build the app using Webpack and deploy to IPFS
 
-pool:
-  vmImage: 'Ubuntu 18.04'
+# Define repository
+resources:
+  - repo: self
 
-steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '12.x'
-  displayName: 'Install Node.js'
+# Trigger on changes to the master branch
+trigger:
+  - master
 
-- script: |
-    curl -L https://italypaleale.blob.core.windows.net/public/calendar-next-dotenv -o .env
-    echo ".env file"
-    cat .env
-  displayName: 'Download .env file'
+# Variables for the entire pipeline
+variables:
+  # Version of Pinata Pinner
+  PINATAPINNER_VERSION: 0.1.1
 
-- script: |
-    npm ci 
-    npm run build
-  displayName: 'Compile app'
+# Stages
+stages:
 
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact: drop'
-  inputs:
-    PathtoPublish: dist
+  # Build app stage
+  - stage: build
+    displayName: 'Build app'
+    jobs:
+
+      # Build app job
+      - job: build
+        displayName: 'Build app'
+
+        # Run on Linux (Ubuntu 18.04)
+        pool:
+          vmImage: 'Ubuntu-18.04'
+
+        # Steps
+        steps:
+          # Install Node.js
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '12.x'
+            displayName: 'Install Node.js'
+
+          # Download the .env file
+          - script: |
+              curl -L https://italypaleale.blob.core.windows.net/public/calendar-next-dotenv -o .env
+              echo ".env file"
+              cat .env
+            displayName: 'Download .env file'
+
+          # Build app using Webpack
+          - script: |
+              npm ci 
+              npm run build
+            displayName: 'Build app using Webpack'
+
+          # Publish the compiled app as pipeline artifact
+          - publish: '$(System.DefaultWorkingDirectory)/dist'
+            displayName: 'Publish Artifact: dist'
+            artifact: 'dist'
+
+  # Stage app stage
+  - stage: staging
+    displayName: 'Stage app'
+    jobs:
+
+      # Stage app job
+      - deployment: staging
+        environment: Staging
+        displayName: 'Stage app'
+
+        # Run on Linux (Ubuntu 18.04)
+        pool:
+          vmImage: 'Ubuntu-18.04'
+        
+        # Deployment strategy is "runOnce"
+        strategy:
+          runOnce:
+            deploy:
+              # Steps
+              steps:
+                # Download pipeline artifact
+                - download: current
+                  artifact: 'dist'
+
+                # Copy files to staging via SSH
+                - task: CopyFilesOverSSH@0
+                  displayName: 'Copy files to staging via SSH'
+                  inputs:
+                    sshEndpoint: 'IPFS-EU'
+                    sourceFolder: '$(Pipeline.Workspace)/dist'
+                    targetFolder: '/data/ipfs-staging/calendar-next'
+                    cleanTargetFolder: true
+                    failOnEmptySource: true
+
+                # Pin files on IPFS
+                - task: SSH@0
+                  name: pinfiles
+                  displayName: 'Pin files on IPFS'
+                  inputs:
+                    sshEndpoint: 'IPFS'
+                    runOptions: inline
+                    inline: |
+                      set -e
+                      
+                      # Add files to IPFS
+                      IPFS_HASH=$(sudo docker exec ipfs-node ipfs add -rQ /staging/calendar-next)
+                      echo "IPFS hash: ${IPFS_HASH}"
+
+                      # Set the IPFS_HASH variable
+                      echo "##vso[task.setvariable variable=IPFS_HASH]$IPFS_HASH"
+
+                # Pin on Pinata
+                - script: |
+                    set -e
+                    
+                    # Download pinatapinner
+                    sudo curl -L "https://github.com/ItalyPaleAle/pinatapinner/releases/download/v$(PINATAPINNER_VERSION)/pinatapinner_linux_amd64" -o /usr/local/bin/pinatapinner
+                    sudo chmod +x /usr/local/bin/pinatapinner
+                    
+                    # Pin on Pinata
+                    pinatapinner $(Pipeline.Workspace)/dist "calendar-next-${BUILD_BUILDID}"
+                  displayName: 'Pin on Pinata'
+                  env:
+                    PINATA_API_KEY: $(PINATA_API_KEY)
+                    PINATA_SECRET_KEY: $(PINATA_SECRET_KEY)
+
+                # Write IPFS hash to file
+                - script: |
+                    set -e
+                    mkdir -p $(Pipeline.Workspace)/variables
+                    echo "$IPFS_HASH" > $(Pipeline.Workspace)/variables/IPFS_HASH
+                  displayName: 'Write IPFS hash to file'
+
+                # Publish the variables artifact
+                - publish: $(Pipeline.Workspace)/variables
+                  artifact: variables
+                  displayName: 'Publish pipeline artifacts'
