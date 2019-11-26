@@ -94,15 +94,24 @@ export class Credentials {
         if (!process.env.AUTH_CLIENT_ID) {
             throw Error('Empty AUTH_CLIENT_ID env variable')
         }
-        if (!process.env.APP_URL) {
-            throw Error('Empty APP_URL env variable')
+
+        // Return URL
+        // Use APP_URL env var or fallback to the current URL
+        let appUrl
+        if (process.env.APP_URL) {
+            appUrl = encodeURIComponent(process.env.APP_URL)
+        }
+        else {
+            // Remove the fragment
+            let href = window.location.href
+            if (window.location.hash && window.location.hash.length) {
+                href = href.slice(0, -1 * window.location.hash.length)
+            }
+            appUrl = encodeURIComponent(href)
         }
 
         // Generate a nonce
         const nonce = this._nonce.generate()
-
-        // URL-encode the return URL
-        const appUrl = encodeURIComponent(process.env.APP_URL)
 
         // Generate the URL
         const map = {
