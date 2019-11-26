@@ -99,16 +99,23 @@ export class Credentials {
         // Use APP_URL env var or fallback to the current URL
         let appUrl
         if (process.env.APP_URL) {
-            appUrl = encodeURIComponent(process.env.APP_URL)
+            appUrl = process.env.APP_URL
         }
         else {
-            // Remove the fragment
+            // Remove the fragment from the URL
             let href = window.location.href
             if (window.location.hash && window.location.hash.length) {
                 href = href.slice(0, -1 * window.location.hash.length)
             }
-            appUrl = encodeURIComponent(href)
+            // Remove index.html from the end if present
+            if (href.endsWith('index.html')) {
+                href = href.slice(0, -10)
+            }
+            appUrl = href
         }
+
+        // Ensure it ends with a /
+        appUrl += appUrl.charAt(appUrl.length) == '/' ? '' : '/'
 
         // Generate a nonce
         const nonce = this._nonce.generate()
@@ -117,7 +124,7 @@ export class Credentials {
         const map = {
             '{clientId}': process.env.AUTH_CLIENT_ID,
             '{nonce}': nonce,
-            '{appUrl}': appUrl
+            '{appUrl}': encodeURIComponent(appUrl)
         }
         return process.env.AUTH_URL.replace(
             new RegExp(Object.keys(map).join('|'), 'g'),
@@ -312,7 +319,7 @@ export class Credentials {
             throw Error('JWT payload is invalid')
         }
         if (!tenant) {
-            throw Error('Tenant ID missing in payload') 
+            throw Error('Tenant ID missing in payload')
         }
 
         // Get the issuer
