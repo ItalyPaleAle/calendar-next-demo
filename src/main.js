@@ -80,7 +80,7 @@ const app = (async function() {
 
     // Crete a Svelte app by loading the main view
     window.svelteApp = new App({
-        target: document.body
+        target: document.getElementById('appcontainer')
     })
 })()
 
