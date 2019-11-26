@@ -131,7 +131,7 @@ stages:
                 # Update the reply URLs for the Azure AD application
                 - task: AzureCLI@2
                   inputs:
-                    azureSubscription: 'Pay-as-you-go(7ba26f9f-fa33-42a4-a80b-a844a191e2a9)'
+                    azureSubscription: 'Azure calendar-next CI'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
