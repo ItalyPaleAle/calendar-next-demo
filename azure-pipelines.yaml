@@ -130,8 +130,9 @@ stages:
                 
                 # Update the reply URLs for the Azure AD application
                 - task: AzureCLI@2
+                  displayName: 'Updated Azure AD application'
                   inputs:
-                    azureSubscription: 'Azure calendar-next CI'
+                    azureSubscription: 'Azure calendar-next CI($(AZURE_SUBSCRIPTION))'
                     scriptType: 'bash'
                     scriptLocation: 'inlineScript'
                     inlineScript: |
