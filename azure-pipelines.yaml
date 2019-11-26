@@ -128,6 +128,7 @@ stages:
                     echo "$IPFS_HASH" > $(Pipeline.Workspace)/variables/IPFS_HASH
                   displayName: 'Write IPFS hash to file'
                 
+                # Update the reply URLs for the Azure AD application
                 - task: AzureCLI@2
                   inputs:
                     azureSubscription: 'Pay-as-you-go(7ba26f9f-fa33-42a4-a80b-a844a191e2a9)'
