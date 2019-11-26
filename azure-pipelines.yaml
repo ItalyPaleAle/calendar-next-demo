@@ -159,7 +159,6 @@ stages:
                       
                       # Update the list of reply URLs
                       az ad app update --id $AAD_APPLICATION_ID --reply-urls $UPDATED_REPLY_URLS
-                    arguments: '--allow-no-subscriptions'
 
                 # Publish the variables artifact
                 - publish: $(Pipeline.Workspace)/variables
