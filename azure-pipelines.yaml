@@ -127,6 +127,36 @@ stages:
                     mkdir -p $(Pipeline.Workspace)/variables
                     echo "$IPFS_HASH" > $(Pipeline.Workspace)/variables/IPFS_HASH
                   displayName: 'Write IPFS hash to file'
+                
+                - task: AzureCLI@2
+                  inputs:
+                    azureSubscription: 'Pay-as-you-go(7ba26f9f-fa33-42a4-a80b-a844a191e2a9)'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      # Template
+                      # HASH1 is the current IPFS HASH, and HASH2 is the new one
+                      REPLY_URL_TEMPLATE="http://localhost:3000/ http://localhost:8080/ipns/myapp.something/ http://localhost:8080/ipfs/{HASH1}/ http://localhost:8080/ipfs/{HASH2}/ https://gateway.ipfs.io/ipns/myapp.something/ https://gateway.ipfs.io/ipfs/{HASH1}/ https://gateway.ipfs.io/ipfs/{HASH2}/ https://cloudflare-ipfs.com/ipns/myapp.something/ https://cloudflare-ipfs.com/ipfs/{HASH1}/ https://cloudflare-ipfs.com/ipfs/{HASH2}/ https://gateway.pinata.cloud/ipns/myapp.something/ https://gateway.pinata.cloud/ipfs/{HASH1}/ https://gateway.pinata.cloud/ipfs/{HASH2}/ https://ipfs/{HASH2}"
+                      
+                      # Get the current list of reply URLs
+                      CURRENT_REPLY_URLS=$(az ad app show --id $AAD_APPLICATION_ID | jq -r '.replyUrls | join(" ")')
+                      echo "Current reply URLs: ${CURRENT_REPLY_URLS}"
+                      
+                      # Get the current IPFS hash
+                      CURRENT_IPFS_HASH='none'
+                      if [[ ${CURRENT_REPLY_URLS} =~ https\:\/\/ipfs\/([A-Za-z[0-9]{46}) ]]; 
+                      then 
+                        CURRENT_IPFS_HASH=${BASH_REMATCH[1]}; 
+                      fi
+                      echo "Current IPFS hash: ${CURRENT_IPFS_HASH}"
+                      
+                      # Updated list of reply URLs
+                      UPDATED_REPLY_URLS="${REPLY_URL_TEMPLATE//\{HASH1\}/$CURRENT_IPFS_HASH}"
+                      UPDATED_REPLY_URLS="${UPDATED_REPLY_URLS//\{HASH2\}/$IPFS_HASH}"
+                      echo "Update reply URLs: ${UPDATED_REPLY_URLS}"
+                      
+                      # Update the list of reply URLs
+                      az ad app update --id $AAD_APPLICATION_ID --reply-urls $UPDATED_REPLY_URLS
 
                 # Publish the variables artifact
                 - publish: $(Pipeline.Workspace)/variables
