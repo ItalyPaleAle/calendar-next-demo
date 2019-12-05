@@ -1,5 +1,13 @@
 # Build the app using Webpack and deploy to IPFS
 
+# This pipeline needs the following variables defined in Azure Pipelines:
+# - DOMAIN: name of the domain where the app is deployed to (e.g. "next.italypaleale.me")
+# - AAD_APPLICATION_ID: application/client ID for the OAuth application
+# - CLOUDFLARE_API_TOKEN (secret): API token for Cloudflare, authorized to modify the DNS of the specific domain
+# - CLOUDFLARE_ZONE_ID (secret): Zone ID for the domain in Cloudflare
+# - PINATA_API_KEY (secret): API key for pinata.cloud
+# - PINATA_SECRET_KEY (secret): Secret key for pinata.cloud
+
 # Define repository
 resources:
   - repo: self
@@ -13,7 +21,7 @@ variables:
   # Version of Pinata Pinner
   PINATAPINNER_VERSION: 0.1.1
   # Domain to update (DNSLink)
-  CLOUDFLARE_DOMAIN: '_dnslink.next.italypaleale.me'
+  CLOUDFLARE_DOMAIN: '_dnslink.$(DOMAIN)'
 
 # Stages
 stages:
@@ -140,7 +148,7 @@ stages:
                     inlineScript: |
                       # Template
                       # HASH1 is the current IPFS HASH, and HASH2 is the new one
-                      REPLY_URL_TEMPLATE="http://localhost:3000/ http://localhost:8080/ipns/myapp.something/ http://localhost:8080/ipfs/{HASH1}/ http://localhost:8080/ipfs/{HASH2}/ https://gateway.ipfs.io/ipns/myapp.something/ https://gateway.ipfs.io/ipfs/{HASH1}/ https://gateway.ipfs.io/ipfs/{HASH2}/ https://cloudflare-ipfs.com/ipns/myapp.something/ https://cloudflare-ipfs.com/ipfs/{HASH1}/ https://cloudflare-ipfs.com/ipfs/{HASH2}/ https://gateway.pinata.cloud/ipns/myapp.something/ https://gateway.pinata.cloud/ipfs/{HASH1}/ https://gateway.pinata.cloud/ipfs/{HASH2}/ https://ipfs/{HASH2}"
+                      REPLY_URL_TEMPLATE="http://localhost:3000/ http://localhost:8080/ipns/$(DOMAIN)/ http://localhost:8080/ipfs/{HASH1}/ http://localhost:8080/ipfs/{HASH2}/ https://gateway.ipfs.io/ipns/$(DOMAIN)/ https://gateway.ipfs.io/ipfs/{HASH1}/ https://gateway.ipfs.io/ipfs/{HASH2}/ https://cloudflare-ipfs.com/ipns/$(DOMAIN)/ https://cloudflare-ipfs.com/ipfs/{HASH1}/ https://cloudflare-ipfs.com/ipfs/{HASH2}/ https://gateway.pinata.cloud/ipns/$(DOMAIN)/ https://gateway.pinata.cloud/ipfs/{HASH1}/ https://gateway.pinata.cloud/ipfs/{HASH2}/ https://$(DOMAIN)/ https://ipfs/{HASH2}"
                       
                       # Get the current list of reply URLs
                       CURRENT_REPLY_URLS=$(az ad app show --id $AAD_APPLICATION_ID | jq -r '.replyUrls | join(" ")')
