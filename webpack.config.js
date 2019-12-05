@@ -41,8 +41,8 @@ module.exports = {
     },
     output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: '[name].[hash:8].js',
-        chunkFilename: '[name].[contenthash:8].js',
+        filename: prod ? '[name].[hash:8].js' : '[name].js',
+        chunkFilename: prod ? '[name].[contenthash:8].js' : '[name].js',
         crossOriginLoading: 'anonymous'
     },
     module: {
@@ -60,7 +60,7 @@ module.exports = {
             {
                 test: /\.css$/,
                 use: [
-                    'style-loader',
+                    prod ? MiniCssExtractPlugin.loader : 'style-loader',
                     'css-loader',
                     'postcss-loader'
                 ]
@@ -83,7 +83,7 @@ module.exports = {
 
         // Minify all extracted CSS
         new MiniCssExtractPlugin({
-            filename: '[name].[hash].css'
+            filename: '[name].[contenthash:8].css'
         }),
 
         // Supports reading the .env file
