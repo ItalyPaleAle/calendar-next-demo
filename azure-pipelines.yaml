@@ -12,6 +12,8 @@ trigger:
 variables:
   # Version of Pinata Pinner
   PINATAPINNER_VERSION: 0.1.1
+  # Domain to update (DNSLink)
+  CLOUDFLARE_DOMAIN: '_dnslink.next.italypaleale.me'
 
 # Stages
 stages:
@@ -62,7 +64,7 @@ stages:
 
       # Stage app job
       - deployment: staging
-        environment: Staging
+        environment: Calendar-Next-Staging
         displayName: 'Stage app'
 
         # Run on Linux (Ubuntu 18.04)
@@ -164,3 +166,49 @@ stages:
                 - publish: $(Pipeline.Workspace)/variables
                   artifact: variables
                   displayName: 'Publish pipeline artifacts'
+
+  # Update production stage
+  - stage: production
+    displayName: 'Update production'
+    jobs:
+
+      # Stage app job
+      - deployment: production
+        environment: Calendar-Next-Production
+        displayName: 'Update production'
+
+        # Run on Linux (Ubuntu 18.04)
+        pool:
+          vmImage: 'Ubuntu-18.04'
+        
+        # Deployment strategy is "runOnce"
+        strategy:
+          runOnce:
+            deploy:
+              # Steps
+              steps:
+                # Download the variables artifact
+                - download: current
+                  artifact: variables
+                  displayName: 'Download pipeline artifacts'
+
+                # Update DNS record
+                - script: |
+                    set -e
+
+                    IPFS_HASH=$(cat $(Pipeline.Workspace)/variables/IPFS_HASH)
+                    
+                    echo "Updating DNSLink to ${IPFS_HASH}"
+
+                    [[ -z "$IPFS_HASH" ]] && { echo "Variable IPFS_HASH is empty" ; exit 1; }
+
+                    RECORD_ID=$(curl -sS -X GET "https://api.cloudflare.com/client/v4/zones/$(CLOUDFLARE_ZONE_ID)/dns_records?type=TXT&name=$(CLOUDFLARE_DOMAIN)" \
+                          -H "Content-Type:application/json" \
+                          -H "Authorization:Bearer $(CLOUDFLARE_API_TOKEN)" \
+                              | jq -r '.result[0].id')
+                    
+                    curl -sS -X PUT "https://api.cloudflare.com/client/v4/zones/$(CLOUDFLARE_ZONE_ID)/dns_records/$RECORD_ID" \
+                          -H "Content-Type:application/json" \
+                          -H "Authorization:Bearer $(CLOUDFLARE_API_TOKEN)" \
+                          --data "{\"type\":\"TXT\",\"name\":\"$(CLOUDFLARE_DOMAIN)\",\"content\":\"dnslink=/ipfs/$IPFS_HASH\",\"ttl\":120,\"priority\":10,\"proxied\":false}"
+                  displayName: 'Update DNS record'
