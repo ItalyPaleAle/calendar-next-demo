@@ -33,6 +33,16 @@ if (!prod) {
     entry.webpackServe = 'webpack-plugin-serve/client'
 }
 
+const addPlugins = []
+if (!prod) {
+    // Enable the serve plugin in dev only
+    addPlugins.push(new WebpackPluginServe({
+        static: 'dist',
+        host: '0.0.0.0',
+        port: 3000
+    }))
+}
+
 module.exports = {
     entry,
     resolve: {
@@ -69,13 +79,6 @@ module.exports = {
     },
     mode,
     plugins: [
-        // Serve
-        new WebpackPluginServe({
-            static: 'dist',
-            host: '0.0.0.0',
-            port: 3000
-        }),
-
         // Cleanup dist folder
         new CleanWebpackPlugin({
             cleanOnceBeforeBuildPatterns: ['**/*', '!assets', '!assets/*']
@@ -109,7 +112,7 @@ module.exports = {
             hashFuncNames: ['sha384'],
             enabled: prod,
         })
-    ],
+    ].concat(addPlugins),
     watch: !prod,
     devtool: prod ? false : 'source-map'
 }
