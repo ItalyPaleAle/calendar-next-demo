@@ -5,8 +5,6 @@
 # - AAD_APPLICATION_ID: application/client ID for the OAuth application
 # - CLOUDFLARE_API_TOKEN (secret): API token for Cloudflare, authorized to modify the DNS of the specific domain
 # - CLOUDFLARE_ZONE_ID (secret): Zone ID for the domain in Cloudflare
-# - PINATA_API_KEY (secret): API key for pinata.cloud
-# - PINATA_SECRET_KEY (secret): Secret key for pinata.cloud
 
 # Define repository
 resources:
@@ -21,8 +19,6 @@ trigger:
 
 # Variables for the entire pipeline
 variables:
-  # Version of Pinata Pinner
-  PINATAPINNER_VERSION: 0.1.1
   # Domain to update (DNSLink)
   CLOUDFLARE_DOMAIN: '_dnslink.$(DOMAIN)'
 
@@ -118,21 +114,6 @@ stages:
 
                       # Set the IPFS_HASH variable
                       echo "##vso[task.setvariable variable=IPFS_HASH]$IPFS_HASH"
-
-                # Pin on Pinata
-                - script: |
-                    set -e
-                    
-                    # Download pinatapinner
-                    sudo curl -L "https://github.com/ItalyPaleAle/pinatapinner/releases/download/v$(PINATAPINNER_VERSION)/pinatapinner_linux_amd64" -o /usr/local/bin/pinatapinner
-                    sudo chmod +x /usr/local/bin/pinatapinner
-                    
-                    # Pin on Pinata
-                    pinatapinner $(Pipeline.Workspace)/dist "calendar-next-${BUILD_BUILDID}"
-                  displayName: 'Pin on Pinata'
-                  env:
-                    PINATA_API_KEY: $(PINATA_API_KEY)
-                    PINATA_SECRET_KEY: $(PINATA_SECRET_KEY)
 
                 # Write IPFS hash to file
                 - script: |
