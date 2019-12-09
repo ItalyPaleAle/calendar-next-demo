@@ -12,9 +12,12 @@
 resources:
   - repo: self
 
-# Trigger on changes to the master branch
+# Trigger on changes to the master and build/* branches
 trigger:
-  - master
+  branches:
+    include:
+      - 'master'
+      - 'build/*'
 
 # Variables for the entire pipeline
 variables:
