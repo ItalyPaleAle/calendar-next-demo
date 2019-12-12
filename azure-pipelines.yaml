@@ -146,6 +146,13 @@ stages:
                         CURRENT_IPFS_HASH=${BASH_REMATCH[1]}; 
                       fi
                       echo "Current IPFS hash: ${CURRENT_IPFS_HASH}"
+
+                      # If the hash hasn't changed, it means the app's code didn't change
+                      # We need to avoid having the same redirect URI twice
+                      if [ "$IPFS_HASH" == "$CURRENT_IPFS_HASH" ]; then
+                          echo "IPFS hash did not change"
+                          CURRENT_IPFS_HASH="null"
+                      fi
                       
                       # Updated list of reply URLs
                       UPDATED_REPLY_URLS="${REPLY_URL_TEMPLATE//\{HASH1\}/$CURRENT_IPFS_HASH}"
