@@ -1,6 +1,6 @@
 # Next on my calendar - Demo app
 
-This is a demo JAMstack application (JavaScript, API, pre-rendered Markup), showcasing how apps that are completely client-side can have dynamic capabilities by relying on third-party APIs such as those powered by Office 365 and the Microsoft Graph. It also includes the ability to be deployed on the distributed web using the [Inter-Planetary File System](https://ipfs.io?utm_source=github&utm_medium=referral&utm_campaign=italypaleale-calendar-next-demo) (IPFS).
+This is a demo JAMstack application (JavaScript, API, pre-rendered Markup), showcasing how apps that are completely client-side can have dynamic capabilities by relying on third-party APIs, such as those powered by Office 365 and the Microsoft Graph. It also includes the ability to be deployed on the distributed web using the [Inter-Planetary File System](https://ipfs.io?utm_source=github&utm_medium=referral&utm_campaign=italypaleale-calendar-next-demo) (IPFS).
 
 > Learn more: [Your next app might not have a backend](https://withblue.ink/2019/11/16/your-next-app-may-not-have-a-backend.html?utm_source=github&utm_medium=referral&utm_campaign=italypaleale-calendar-next-demo)
 
@@ -9,7 +9,7 @@ This demo apps shows what's the next event in your Office 365 calendar.
 ## See this app in action
 
 This app is live on [next.italypaleale.me](https://next.italypaleale.me), served via IPFS!.<br />
-You will need an Office 365 "Work or school" account to authenticate, which is usually connected to an Office 365 Business/Enterprise or Education. Personal Microsoft Accounts (e.g. Outlook.com/Hotmail) are not supported by this demo app.
+You will need an Office 365 "Work or school" account to authenticate, which is usually connected to an Office 365 Business/Enterprise or Education. Personal Microsoft Accounts (e.g. Outlook.com/Hotmail) are not supported by this demo app at the moment.
 
 ![App screenshot](./screenshot.png)
 
@@ -48,19 +48,19 @@ You'll also need a (free) OAuth application to connect to the Microsoft Graph an
 
 > Full instructions in the [documentation](https://docs.microsoft.com/en-us/graph/auth-register-app-v2?utm_source=github&utm_medium=referral&utm_campaign=italypaleale-calendar-next-demo)
 
-1. Sign in to the Azure Portal at [portal.azure.com](https://portal.azure.com), for example using your GitHub account. You **do not need** an Azure subscription for this.
+1. Sign in to the Azure Portal at [portal.azure.com](https://portal.azure.com), for example using your GitHub account. You do not need an Azure subscription for this.
 2. Search for "Azure Active Directory" (e.g. using the search bar at the top)
 3. In the left blade, under "Manage", look for "App registrations"
 4. Register a new application:
-    - Name: "Next on your calendar", or any value you want
+    - Name: "Next on your calendar"
     - Supported account type: Enable only Work and school accounts (the app doesn't support personal Microsoft accounts at this point)
-    - Redirect URI: Choose "Web", then set `https://ipfs/null` (the CI will automatically update this later on)
+    - Redirect URI: Choose "Web", then set `https://ipfs/null` (we'll add more later, and the CI will update this automatically)
 5. After creating the app, from the information blade copy the value for **Application (client) ID**, which we'll need later.
 6. In the left blade, under "Manage" select "Authentication"
     1. Add a new Redirect UI of type "Web" pointing to `http://localhost:3000`
     2. In the "Implicit grant" section, check both boxes to enable the implicit grant for "Access tokens" and "ID tokens" (both). We need to do this because our app is a SPA without a backend server.
     3. Save the changes
-7 . In the left blade, under "Manage" select "API permissions"
+7. In the left blade, under "Manage" select "API permissions"
     1. Click on "Add a permission"
     2. Select "Microsoft Graph"
     3. Select "Delegated permissions"
@@ -111,7 +111,7 @@ You'll also need a (free) OAuth application to connect to the Microsoft Graph an
 > "oauth2AllowImplicitFlow": true,
 > "signInAudience": "AzureADMultipleOrgs",
 > ````
-> 
+>
 
 ### 4. Create a .env file
 
@@ -161,7 +161,7 @@ In order to publish on IPFS, you need to have a running IPFS node. For testing, 
 
 The easiest way to run the IPFS daemon is to use Docker. You'll need a Linux VM with Docker installed.
 
-> You can get a free Linux VM with an [Azure trial account](https://azure.microsoft.com/free/open-source/?utm_source=github&utm_medium=referral&utm_campaign=italypaleale-calendar-next-demo)
+> You can get a free Linux VM with an [Azure trial account](https://azure.microsoft.com/free/open-source/?utm_source=github&utm_medium=referral&utm_campaign=italypaleale-calendar-next-demo). On Azure, a small B1s VM can be sufficient for testing IPFS.
 
 After having installed Docker, run:
 
@@ -193,7 +193,7 @@ After "compiling" the app in the previous step, copy the entire `dist/` folder t
 Then, run:
 
 ````sh
-# (Note the path inside the container is just /staging)
+# (Note the /data/ipfs-staging path inside the container is just /staging)
 sudo docker exec \
   ipfs-node \
     ipfs add -rQ /staging/dist
@@ -203,9 +203,9 @@ The command will output the multi-hash of the folder, which will look like `QmSV
 
 #### Setting up the OAuth redirect URI
 
-Note that authentication won't quite work yet, because we haven't set up the correct "redirect URIs" for OAuth.
+Note that with the URL above authentication won't quite work yet, because we haven't set up the correct "redirect URIs" for OAuth.
 
-In the Azure Active Directory app's configuration, add another redirect URI, pointing to the address on the IPFS gateway: `https://gateway.ipfs.io/ipfs/QmSV86hY1Qen22aWrLinNrXmhdc7LbvaFFJZW3ooj96XcU/` (don't forget the trailing slash!)
+In the Azure Active Directory app's configuration, add another redirect URI (just like you've done earlier), pointing to the address on the IPFS gateway: `https://gateway.ipfs.io/ipfs/QmSV86hY1Qen22aWrLinNrXmhdc7LbvaFFJZW3ooj96XcU/` (don't forget the trailing slash!)
 
 ### Setting up IPNS with DNSLink
 
@@ -213,28 +213,28 @@ To simplify the address on IPFS and make it more memorable (as well as something
 
 Setting up DNSLink requires owning a domain name and modifying the DNS records. The actual instructions on how to modify your DNS zone depend on your DNS provider.
 
-Assuming you want to use `app.example.com` as domain name for DNSLink, as an example, you'll need to create the following DNS record:
+Assuming you want to use `app.example.com` as domain name for DNSLink, for example, you'll need to create the following DNS record:
 
 - Name: `_dnslink.app.example.com` (a `_dnslink` subdomain on the domain you want to use)
 - Type: `TXT`
-- Value: `dnslink=/ipfs/QmSV86hY1Qen22aWrLinNrXmhdc7LbvaFFJZW3ooj96XcU` (replace with the IPFS content ID of your app)
-- Time To Live: your choice; set to very low (e.g. 2 minutes) if you plan to update the app with relatively high frequency
+- Value: `dnslink=/ipfs/QmSV86hY1Qen22aWrLinNrXmhdc7LbvaFFJZW3ooj96XcU` (replace with the IPFS content ID of your app's folder)
+- Time To Live: your choice. Set this to a very low time (e.g. 2 minutes) if you plan to update the app with relatively high frequency, while higher TTLs allow for better caching.
 
-After having create the DNS record, you can access your app on IPFS at: `https://gateway.ipfs.io/ipns/app.example.com` (note it says `ipns` this time!)
+After having created the DNS record, you can access your app on IPFS at: `https://gateway.ipfs.io/ipns/app.example.com` (note it says `ipns` this time!)
 
 > Don't forget to add `https://gateway.ipfs.io/ipns/app.example.com/` (with trailing slash) to the OAuth app's list of redirect URIs in Azure AD to be able to authenticate when browsing the app at this address!
 
 ### Pointing a web domain
 
-As you recall from the top of this "readme", the sample app is available at `https://next.italypaleale.me`, and it's served via IPFS. We can do that thanks to Cloudflare and their [Distributed Web Gateway](https://www.cloudflare.com/distributed-web-gateway/).
+As you recall from the top of this "readme", the sample app is available at `https://next.italypaleale.me`, and it's served via IPFS. We can do that thanks to Cloudflare and their [Distributed Web Gateway](https://www.cloudflare.com/distributed-web-gateway/?utm_source=github&utm_medium=referral&utm_campaign=italypaleale-calendar-next-demo).
 
 1. Create a DNS record with a CNAME pointing to `cloudflare-ipfs.com`. For example, to point `app.example.com`, create the following record:
     - Name: `app.example.com`
     - Type: `CNAME`
     - Destination: `cloudflare-ipfs.com` (note: some DNS servers want a period at the end, such as `cloudflare-ipfs.com.`)
     - Time To Live: whatever value makes sense for you (if you're not sure, you can use 1 hour)
-    - Note: CNAME records can only be defined on sub-domains (e.g. `app.example.com`) and not on root domains (e.g. `example.com`). However, some DNS servers support the so-called "CNAME flattening", and allow you to set CNAME records on root domains too: one example is Cloudflare DNS.
-2. Navigate to [www.cloudflare.com/distributed-web-gateway/?utm_source=github&utm_medium=referral&utm_campaign=italypaleale-calendar-next-demo](https://www.cloudflare.com/distributed-web-gateway/?utm_source=github&utm_medium=referral&utm_campaign=italypaleale-calendar-next-demo) and scroll to the bottom, looking for the "Connecting your website" section
+    - Note: CNAME records can only be defined on sub-domains (e.g. `app.example.com`) and not on root domains (e.g. `example.com`). However, some DNS servers support "CNAME flattening", and allow you to set CNAME records on root domains too: one example is Cloudflare DNS.
+2. Navigate to [www.cloudflare.com/distributed-web-gateway/](https://www.cloudflare.com/distributed-web-gateway/?utm_source=github&utm_medium=referral&utm_campaign=italypaleale-calendar-next-demo) and scroll to the bottom, looking for the "Connecting your website" section
 3. Type your domain's name in the box (e.g. `app.example.com`) and submit the form, so Cloudflare can build a TLS certificate for your domain. This should take just a few seconds.
 
 You're done! You can now browse your app directly at `https://app.example.com`
@@ -243,14 +243,14 @@ You're done! You can now browse your app directly at `https://app.example.com`
 
 ## Continuous Integration and Continuous Delivery
 
-This repository is pre-configured for setting up Continuous Integration and Continuous Delivery (CI/CD) with [Azure Pipelines](https://azure.com/pipelines?utm_source=github&utm_medium=referral&utm_campaign=italypaleale-calendar-next-demo). Azure Pipelines is free for open source repositories (with unlimited minutes), and offers 1,800 minutes of CI/CD for private repositories.
+This repository is pre-configured for setting up Continuous Integration and Continuous Delivery (CI/CD) with [Azure Pipelines](https://azure.com/pipelines?utm_source=github&utm_medium=referral&utm_campaign=italypaleale-calendar-next-demo). Azure Pipelines is free for open source repositories (with unlimited minutes), and offers 1,800 minutes of CI/CD for private repositories.
 
 The CI/CD job is defined in the [azure-pipelines.yaml](./azure-pipelines.yaml) file, which is thoroughly commented. At a high level, it does:
 
 - Builds the app
 - Copies the "compiled" app to the server running IPFS (via SSH), then publishes it on IPFS
 - Updates the OAuth redirect URLs in Azure Active Directory to add the updated IPFS hash (and keeps the previous version too)
-- Updates the value of the DNSLink record when using the Cloudflare DNS APIs (note: this requires having Cloudflare managing your DNS zone!)
+- Updates the value of the DNSLink record when using the Cloudflare DNS APIs (note: this requires having Cloudflare managing your DNS zone)
 
 ### 1. Fork this repo
 
@@ -260,15 +260,15 @@ If you haven't already, create your own fork for this repository on GitHub.
 
 You will need to publish the `.env` file that you created earlier in a place that's publicly accessible on the Internet (cannot require authentication). (_Note: this isn't a security risk, as the information in the `.env` file is included in your app's published code anyways_)
 
-An idea could be to use a GitHub Gist, and then get its raw URL. For example, this is the `.env` file I'm using: `https://gist.githubusercontent.com/ItalyPaleAle/163ff6527e5a4ca3f5d65a86fa9a6daf/raw/2e15d239419f96ff7923e6521ed9c1d106a17c7a/.env`
+An idea could be to use a GitHub Gist, and then get its raw URL. For example, this is the `.env` file I'm using: `https://gist.githubusercontent.com/ItalyPaleAle/163ff6527e5a4ca3f5d65a86fa9a6daf/raw/2e15d239419f96ff7923e6521ed9c1d106a17c7a/.env` (_please don't blindly copy mine, or Bing Maps could start throttling requests_).
 
 ### 3. Create a new Azure DevOps project
 
-Azure Pipelines is part of Azure DevOps, so you'll need to create an account for [Azure Pipelines](https://azure.com/pipelines?utm_source=github&utm_medium=referral&utm_campaign=italypaleale-calendar-next-demo) and then a new project within Azure DevOps (the project's name can be your GitHub username). Signing up is free.
+Azure Pipelines is part of Azure DevOps, so you'll need to create an account for [Azure Pipelines](https://azure.com/pipelines?utm_source=github&utm_medium=referral&utm_campaign=italypaleale-calendar-next-demo) and then a new project within Azure DevOps (the project's name can be your GitHub username). Signing up is free.
 
 ### 4. Setup the SSH connection
 
-We need to set up a service connection so Azure Pipelines can connect to your VM via SSH.
+We need to set up a service connection so Azure Pipelines can connect to your VM via SSH.
 
 1. In the left navbar, click on "Project settings" in the bottom-left corner.
 2. Click on the "New service connection button"
@@ -298,12 +298,12 @@ To start, in the **Azure Portal** (not Azure DevOps!):
     - Supported account type: "Accounts in this organizational directory only"
     - Platform configuration: "Background process and Automation (Daemon) Application"
 4. After creating the app, from the information blade copy the values for **Application (client) ID** and **Directory (tenant) ID**, which we'll need shortly.
-5. Under "Manage", to go "Certificates & Secrets" and create a new **Client secret**. Copy the value, which we'll use in a moment (note that you will only see that value once!).
+5. Under "Manage", to go "Certificates & Secrets" and create a new **Client secret**. Copy the value, which we'll use in a moment (note that you will only see that value only once!)
 6. Go back to the main blade of your Azure AD, and this time select "Roles and administrators" in the "Manage" section.
 7. In the list, select the "Application administrator" role
 8. Click on "Add assignment", then search for the app we just created ("Azure DevOps calendar-next CI") and grant it access
 
-Because of a current issue with the Azure CLI task in Azure Pipelines ([see microsoft/azure-pipelines-tasks#11846](https://github.com/microsoft/azure-pipelines-tasks/issues/11846)), we need to create an empty Resource Group and grant our application access to it.
+Because of a current limitation with the Azure CLI task in Azure Pipelines ([see microsoft/azure-pipelines-tasks#11846](https://github.com/microsoft/azure-pipelines-tasks/issues/11846)), we need to create an empty Resource Group (that we won't use for anything) and grant our application access to it.
 
 1. In the Azure Portal, in the left navbar go to "Resource groups"
 2. Click on "Add" to create a new Resource Group. The name and location are irrelevant.
@@ -333,7 +333,15 @@ We're finally ready to create the connection inside the Azure DevOps portal. In 
 
 If you want to automatically update your DNSLink value, and Cloudflare manages your domain's DNS zone, the CI's last step can do it automatically for you. You need to provide credentials to authorize the CI.
 
-**TODO**
+1. Log in to the [Cloudflare dashboard](https://dash.cloudflare.com) then select your domain (e.g. "example.com") whose DNS are managed by Cloudflare.
+2. In the "Overview" tab, in the right sidebar look for **Zone ID** and copy that value; we'll need it shortly.
+3. Right below the Zone ID, click on "Get your API token"
+4. Click on the "Create token" button
+5. Select "Start with a template" from the radio buttons
+6. Select the "Edit zone DNS" template
+7. In the "Permissions" section, select these values for the dropdowns: "Zone", "DNS", "Edit"
+8. In the "Zone Resources", select these values for the dropdowns: "Include", "Specific zone", then your domain name (e.g. "example.com")
+9. Save, then take note of the **API token**, to be used in the next step.
 
 ### 7. Create a new Pipeline
 
