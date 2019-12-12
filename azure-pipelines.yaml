@@ -3,6 +3,7 @@
 # This pipeline needs the following variables defined in Azure Pipelines:
 # - DOMAIN: name of the domain where the app is deployed to (e.g. "next.italypaleale.me")
 # - AAD_APPLICATION_ID: application/client ID for the OAuth application
+# - DOTENV_FILE: URL to the .env file to retrieve (must be publicly accessible, e.g. a raw GitHub Gist)
 # - CLOUDFLARE_API_TOKEN (secret): API token for Cloudflare, authorized to modify the DNS of the specific domain
 # - CLOUDFLARE_ZONE_ID (secret): Zone ID for the domain in Cloudflare
 
@@ -48,7 +49,7 @@ stages:
 
           # Download the .env file
           - script: |
-              curl -L https://italypaleale.blob.core.windows.net/public/calendar-next-dotenv -o .env
+              curl -L "$(DOTENV_FILE)" -o .env
               echo ".env file"
               cat .env
             displayName: 'Download .env file'
